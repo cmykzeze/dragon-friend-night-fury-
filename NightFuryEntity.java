@@ -169,7 +169,7 @@ public class NightFuryEntity extends TamableAnimal {
             forward *= 0.25f;
         }
 
-        if (!this.isControlledByLocalInstance()) {
+        if (!this.isLocalInstanceAuthoritative()) {
             return;
         }
 
