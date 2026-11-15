@@ -11,6 +11,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Repair the folder layout if the files were uploaded flat
+        run: |
+          python3 - <<'PY'
+          import os, re, shutil
+
+          def put(src, dst):
+              if os.path.dirname(dst):
+                  os.makedirs(os.path.dirname(dst), exist_ok=True)
+              shutil.move(src, dst)
+              print("moved", src, "->", dst)
+
+          if os.path.isdir("src/main/java"):
+              print("Layout is already correct.")
+          else:
+              print("Flat upload detected - rebuilding src/main/...")
+              for f in sorted(os.listdir(".")):
+                  if f.endswith(".java"):
+                      pkg = re.search(r"^package\s+([\w.]+);", open(f, encoding="utf-8").read(), re.M).group(1)
+                      put(f, "src/main/java/" + pkg.replace(".", "/") + "/" + f)
+              res = {
+                  "fabric.mod.json": "src/main/resources/fabric.mod.json",
+                  "icon.png": "src/main/resources/assets/httymd/icon.png",
+                  "night_fury.png": "src/main/resources/assets/httymd/textures/entity/night_fury.png",
+                  "en_us.json": "src/main/resources/assets/httymd/lang/en_us.json",
+                  "convert_model.py": "tools/convert_model.py",
+                  "download": ".gitignore",
+              }
+              for f, dst in res.items():
+                  if os.path.isfile(f):
+                      put(f, dst)
+
+          assert os.path.isfile("src/main/resources/fabric.mod.json"), "fabric.mod.json is missing from the repo"
+          assert os.path.isfile("src/main/java/com/httymd/HttymdMod.java"), "HttymdMod.java is missing from the repo"
+          PY
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -54,6 +89,16 @@ jobs:
           -Ploader_version=$LOADER_VERSION
           -Pfabric_api_version=$FABRIC_API_VERSION
           -Ploom_version=$LOOM_VERSION
+
+      - name: Verify the jar is a valid Fabric mod
+        run: |
+          jar=$(ls build/libs/*.jar | grep -v -- '-sources' | head -n1)
+          echo "Checking $jar"
+          unzip -l "$jar" | head -40
+          # Fails the build if fabric.mod.json is missing from the jar root (the game then calls it a "non-fabric mod").
+          unzip -p "$jar" fabric.mod.json | python3 -c "import json,sys; d=json.load(sys.stdin); print('mod id:', d['id'], 'version:', d['version']); assert d['id']=='httymd' and '$' not in d['version']"
+          unzip -l "$jar" | grep -q 'com/httymd/HttymdMod.class'
+          unzip -l "$jar" | grep -q 'assets/httymd/textures/entity/night_fury.png'
 
       - name: Upload the mod jar
         uses: actions/upload-artifact@v4
