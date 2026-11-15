@@ -55,6 +55,16 @@ jobs:
           -Pfabric_api_version=$FABRIC_API_VERSION
           -Ploom_version=$LOOM_VERSION
 
+      - name: Verify the jar is a valid Fabric mod
+        run: |
+          jar=$(ls build/libs/*.jar | grep -v -- '-sources' | head -n1)
+          echo "Checking $jar"
+          unzip -l "$jar" | head -40
+          # Fails the build if fabric.mod.json is missing from the jar root (the game then calls it a "non-fabric mod").
+          unzip -p "$jar" fabric.mod.json | python3 -c "import json,sys; d=json.load(sys.stdin); print('mod id:', d['id'], 'version:', d['version']); assert d['id']=='httymd' and '$' not in d['version']"
+          unzip -l "$jar" | grep -q 'com/httymd/HttymdMod.class'
+          unzip -l "$jar" | grep -q 'assets/httymd/textures/entity/night_fury.png'
+
       - name: Upload the mod jar
         uses: actions/upload-artifact@v4
         with:
