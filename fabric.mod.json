@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "httymd",
+  "version": "${version}",
+  "name": "HTTYMD: Night Fury",
+  "description": "A friendly, rideable Night Fury that hatches from the Dragon Egg. Ported to Fabric from the HTTYMD mod (How to Train Your Minecraft Dragon) by The HTTYMD Team - model, animations and texture are theirs, used with permission.",
+  "authors": [
+    {
+      "name": "The HTTYMD Team (original mod, model, animations and textures)",
+      "contact": { "homepage": "https://github.com/HTTYMD-Team/HTTYMD-Mod" }
+    },
+    "Too Many People (original mod contributor)"
+  ],
+  "contributors": [
+    "Fabric port"
+  ],
+  "contact": {
+    "homepage": "https://github.com/HTTYMD-Team/HTTYMD-Mod"
+  },
+  "license": "See CREDITS.md",
+  "icon": "assets/httymd/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.httymd.HttymdMod"],
+    "client": ["com.httymd.client.HttymdClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
